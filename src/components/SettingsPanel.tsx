@@ -153,7 +153,7 @@ export function SettingsPanel() {
             value={s.pageTurn}
             onChange={(v) => s.set('pageTurn', v)}
             options={[
-              { value: 'curl', label: 'Page flip' },
+              { value: 'fade', label: 'Fade' },
               { value: 'slide', label: 'Slide' },
               { value: 'none', label: 'None' },
             ]}

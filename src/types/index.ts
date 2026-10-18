@@ -11,7 +11,7 @@ export type ThemeName = 'light' | 'dark' | 'sepia';
 export type ThemePreference = ThemeName | 'system';
 export type FontFamilyKey = 'serif' | 'sans';
 export type FlowMode = 'paginated' | 'scrolled';
-export type PageTurn = 'curl' | 'slide' | 'none';
+export type PageTurn = 'fade' | 'slide' | 'none';
 export type MarginSize = 'narrow' | 'normal' | 'wide';
 
 export interface ReadingProgress {

@@ -66,7 +66,6 @@ export default function Reader({ bookId }: { bookId: string }) {
   const resolvedTheme = useResolvedTheme();
 
   const hostRef = useRef<HTMLDivElement>(null);
-  const shadeRef = useRef<HTMLDivElement>(null);
   const epubRef = useRef<EpubBook | null>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const contentsRef = useRef<{ window: Window } | null>(null);
@@ -365,36 +364,19 @@ export default function Reader({ bookId }: { bookId: string }) {
   }
 
   /**
-   * Page-turn animation. The page text lives in an epub.js iframe we can't snapshot, so we animate
-   * the *arriving* page: it swings in from the binding edge (flip) or glides in (slide), while a soft
-   * shadow sweeps across like light on a curling page. Skipped for reduced motion / continuous scroll.
+   * Page-turn animation, deliberately subtle: the arriving page fades in (optionally with a tiny
+   * drift in the direction of travel). Skipped for reduced motion / continuous scroll.
    */
   function animateTurn(dir: 'next' | 'prev') {
-    const mode = useSettingsStore.getState().pageTurn;
+    const st = useSettingsStore.getState();
     const host = hostRef.current;
-    const shade = shadeRef.current;
-    if (!host || mode === 'none' || useSettingsStore.getState().flow !== 'paginated') return;
+    if (!host || st.pageTurn === 'none' || st.flow !== 'paginated') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const fwd = dir === 'next';
     host.getAnimations().forEach((a) => a.cancel());
-    if (mode === 'slide') {
-      host.animate(
-        [{ transform: `translateX(${fwd ? 36 : -36}px)`, opacity: 0.25 }, { transform: 'translateX(0)', opacity: 1 }],
-        { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' },
-      );
-      return;
-    }
-    host.style.transformOrigin = fwd ? 'left center' : 'right center';
+    const drift = st.pageTurn === 'slide' ? (dir === 'next' ? 14 : -14) : 0;
     host.animate(
-      [
-        { transform: `perspective(1400px) rotateY(${fwd ? -24 : 24}deg)`, opacity: 0.3, offset: 0 },
-        { transform: 'perspective(1400px) rotateY(0deg)', opacity: 1, offset: 1 },
-      ],
-      { duration: 420, easing: 'cubic-bezier(.22,.7,.2,1)' },
-    );
-    shade?.animate(
-      [{ opacity: 0.55, transform: `translateX(${fwd ? '-30%' : '30%'})` }, { opacity: 0, transform: 'translateX(0)' }],
-      { duration: 420, easing: 'ease-out' },
+      [{ transform: `translateX(${drift}px)`, opacity: 0.2 }, { transform: 'translateX(0)', opacity: 1 }],
+      { duration: 200, easing: 'ease-out' },
     );
   }
 
@@ -492,15 +474,7 @@ export default function Reader({ bookId }: { bookId: string }) {
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
       <main id="main" data-tap="" className="absolute inset-0" onClick={onMarginTap}>
         <div data-tap="" className={`mx-auto h-full max-w-[46rem] pb-12 pt-12 ${MARGIN_CLASS[settings.margin]}`}>
-          <div className="relative h-full w-full" style={{ perspective: '1400px' }}>
-            <div ref={hostRef} className="epub-host h-full w-full will-change-transform" aria-label={`Text of ${book.title}`} />
-            <div
-              ref={shadeRef}
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-0"
-              style={{ background: 'linear-gradient(90deg, rgb(0 0 0 / 0.22), transparent 55%)' }}
-            />
-          </div>
+          <div ref={hostRef} className="epub-host h-full w-full" aria-label={`Text of ${book.title}`} />
         </div>
 
         {status === 'ready' && settings.flow === 'paginated' && (
