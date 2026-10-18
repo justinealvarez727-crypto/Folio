@@ -4,11 +4,12 @@ import { useSyncExternalStore } from 'react';
  * Tiny hash router (#/, #/read/<id>). Hash routing means the PWA works
  * on any static host with zero rewrite rules and the browser Back button works.
  */
-export type Route = { name: 'library' } | { name: 'read'; id: string };
+export type Route = { name: 'library' } | { name: 'log' } | { name: 'read'; id: string };
 
 export function parseHash(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'read' && parts[1]) return { name: 'read', id: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'log') return { name: 'log' };
   return { name: 'library' };
 }
 
@@ -26,6 +27,7 @@ export function useRoute(): Route {
 
 export const paths = {
   library: () => '#/',
+  log: () => '#/log',
   read: (id: string) => `#/read/${encodeURIComponent(id)}`,
 };
 

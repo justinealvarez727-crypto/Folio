@@ -33,6 +33,13 @@ export interface Book {
   addedAt: number;
   lastOpenedAt: number | null;
   progress: ReadingProgress;
+  /**
+   * Explicit override of the finished state. `undefined` = automatic (finished once
+   * progress reaches 99%); `true`/`false` = the reader chose "Mark as finished/unread".
+   */
+  finished?: boolean;
+  /** When the reader marked it finished; used to order the shelf (newest on top). */
+  finishedAt?: number;
 }
 
 export type HighlightColor = 'yellow' | 'green' | 'blue' | 'pink';
@@ -65,4 +72,20 @@ export interface TocEntry {
   label: string;
   href: string;
   depth: number;
+}
+
+/** What one book contributed to one calendar day in the reading log. */
+export interface DayBookEntry {
+  /** Snapshot, so the log still reads well after a book is removed from the library. */
+  title: string;
+  author: string;
+  /** Active reading time that day, in seconds (idle gaps are capped, not counted). */
+  seconds: number;
+  /** Page turns / jumps that day. */
+  turns: number;
+  /** Book progress (0..1) at the first and latest activity of the day. */
+  startPct: number;
+  endPct: number;
+  firstAt: number;
+  lastAt: number;
 }

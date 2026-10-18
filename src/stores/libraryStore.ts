@@ -13,6 +13,8 @@ interface LibraryState {
   removeBook: (id: string) => void;
   updateProgress: (id: string, progress: Partial<ReadingProgress>) => void;
   markOpened: (id: string) => void;
+  /** true = shelve as finished, false = move back to the library, undefined = automatic. */
+  setFinished: (id: string, finished: boolean | undefined) => void;
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -29,7 +31,21 @@ export const useLibraryStore = create<LibraryState>()(
         set((s) => {
           const b = s.books[id];
           if (!b) return s;
-          return { books: { ...s.books, [id]: { ...b, progress: { ...b.progress, ...progress, updatedAt: Date.now() } } } };
+          // An explicit "mark as unread" is dropped once the reader is clearly back mid-book,
+          // so reaching the end again shelves the book automatically.
+          const pct = progress.percentage ?? b.progress.percentage;
+          const finished = b.finished === false && pct < 0.99 ? undefined : b.finished;
+          return {
+            books: { ...s.books, [id]: { ...b, finished, progress: { ...b.progress, ...progress, updatedAt: Date.now() } } },
+          };
+        }),
+      setFinished: (id, finished) =>
+        set((s) => {
+          const b = s.books[id];
+          if (!b) return s;
+          return {
+            books: { ...s.books, [id]: { ...b, finished, finishedAt: finished ? Date.now() : undefined } },
+          };
         }),
       markOpened: (id) =>
         set((s) => {

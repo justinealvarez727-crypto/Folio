@@ -7,9 +7,12 @@ import { toast } from '../stores/toastStore';
 import { reportError } from '../lib/perf';
 import type { Book } from '../types';
 import { BookCard } from './BookCard';
+import { BookShelf } from './BookShelf';
+import { bookState, isFinished } from '../lib/status';
 import { Sheet } from './Sheet';
 import { SettingsPanel } from './SettingsPanel';
-import { IconBook, IconPlus, IconSearch, IconSettings } from './Icons';
+import { navigate, paths } from '../lib/router';
+import { IconBook, IconCalendar, IconPlus, IconSearch, IconSettings } from './Icons';
 
 const ConfirmDialog = lazy(() => import('./ConfirmDialog'));
 
@@ -22,9 +25,6 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'reading', label: 'Reading' },
   { id: 'finished', label: 'Finished' },
 ];
-
-const stateOf = (b: Book): Exclude<Filter, 'all'> =>
-  b.progress.percentage >= 0.99 ? 'finished' : !b.progress.cfi && b.progress.percentage === 0 ? 'unread' : 'reading';
 
 export function Library() {
   const booksMap = useLibraryStore((s) => s.books);
@@ -41,16 +41,19 @@ export function Library() {
 
   const all = useMemo(() => Object.values(booksMap), [booksMap]);
 
-  const books = useMemo(() => {
+  const { books, shelved } = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = all.filter((b) => (!q || `${b.title} ${b.author}`.toLowerCase().includes(q)) && (filter === 'all' || stateOf(b) === filter));
+    const matches = all.filter((b) => (!q || `${b.title} ${b.author}`.toLowerCase().includes(q)) && (filter === 'all' || bookState(b) === filter));
+    // Finished books leave the cover grid and go on the shelf below it.
+    const list = matches.filter((b) => !isFinished(b));
+    const shelved = matches.filter(isFinished);
     const by: Record<Sort, (a: Book, b: Book) => number> = {
       recent: (a, b) => (b.lastOpenedAt ?? b.addedAt) - (a.lastOpenedAt ?? a.addedAt),
       added: (a, b) => b.addedAt - a.addedAt,
       title: (a, b) => a.title.localeCompare(b.title),
       progress: (a, b) => b.progress.percentage - a.progress.percentage,
     };
-    return list.sort(by[sort]);
+    return { books: list.sort(by[sort]), shelved };
   }, [all, query, sort, filter]);
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
@@ -127,6 +130,9 @@ export function Library() {
             <IconSearch width={20} height={20} />
           </button>
         )}
+        <button className="icon-btn" onClick={() => navigate(paths.log())} aria-label="Reading log">
+          <IconCalendar width={20} height={20} />
+        </button>
         <button className="icon-btn" onClick={() => setShowSettings(true)} aria-label="Appearance settings">
           <IconSettings width={20} height={20} />
         </button>
@@ -173,13 +179,13 @@ export function Library() {
             )}
           </AnimatePresence>
           <div className="flex items-center gap-2">
-            <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto" role="group" aria-label="Filter books">
+            <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto sm:gap-1.5" role="group" aria-label="Filter books">
               {FILTERS.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id)}
                   aria-pressed={filter === f.id}
-                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                  className={`shrink-0 rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-colors sm:px-3.5 ${
                     filter === f.id ? 'bg-fg text-bg' : 'bg-surface2 text-fg/80 hover:text-fg'
                   }`}
                 >
@@ -192,7 +198,7 @@ export function Library() {
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as Sort)}
-                className="h-8 rounded-md bg-transparent pr-1 text-[13px] font-medium text-fg"
+                className="h-8 w-[76px] rounded-md bg-transparent text-[13px] font-medium text-fg sm:w-auto sm:pr-1"
               >
                 <option value="recent">Recent</option>
                 <option value="added">Added</option>
@@ -213,18 +219,27 @@ export function Library() {
       <main id="main" className="mt-3 flex-1">
         {empty ? (
           <EmptyState importing={importing > 0} onPick={() => fileRef.current?.click()} onSample={addSample} />
-        ) : books.length === 0 ? (
+        ) : books.length === 0 && shelved.length === 0 ? (
           <p className="py-20 text-center text-sm text-muted">
             {query ? `No books match “${query}”.` : `No ${filter === 'all' ? '' : filter + ' '}books.`}
           </p>
         ) : (
-          <ul className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-x-6 md:grid-cols-5 lg:grid-cols-6">
-            <AnimatePresence mode="popLayout">
-              {books.map((b) => (
-                <BookCard key={b.id} book={b} onDelete={setPendingDelete} />
-              ))}
-            </AnimatePresence>
-          </ul>
+          <>
+            {books.length > 0 && (
+              <ul className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-x-6 md:grid-cols-5 lg:grid-cols-6">
+                <AnimatePresence mode="popLayout">
+                  {books.map((b) => (
+                    <BookCard key={b.id} book={b} onDelete={setPendingDelete} />
+                  ))}
+                </AnimatePresence>
+              </ul>
+            )}
+            {shelved.length > 0 && (
+              <div className={books.length > 0 ? 'mt-12' : 'mt-2'}>
+                <BookShelf books={shelved} onDelete={setPendingDelete} />
+              </div>
+            )}
+          </>
         )}
       </main>
 

@@ -1,3 +1,4 @@
+import { useReadingTracker } from '../lib/useReadingTracker';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ePub, { type Book as EpubBook, type NavItem, type Rendition } from 'epubjs';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -7,6 +8,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { loadBookFile, loadLocations, saveLocations } from '../lib/storage';
 import { FONT_STACKS, HIGHLIGHT_COLORS, READER_THEMES } from '../lib/themes';
 import { mark, measure, reportError } from '../lib/perf';
+import { disposeEpub } from '../lib/epubSafe';
 import { useDebouncedCallback, useResolvedTheme } from '../lib/hooks';
 import { navigate, paths } from '../lib/router';
 import type { HighlightColor, MarginSize, ThemeName, TocEntry } from '../types';
@@ -55,6 +57,9 @@ export default function Reader({ bookId }: { bookId: string }) {
   const book = useLibraryStore((s) => s.books[bookId]);
   const updateProgress = useLibraryStore((s) => s.updateProgress);
   const markOpened = useLibraryStore((s) => s.markOpened);
+  const noteReading = useReadingTracker(book);
+  const noteRef = useRef(noteReading);
+  noteRef.current = noteReading;
   const allHighlights = useAnnotationStore((s) => s.highlights);
   const { addHighlight, updateHighlight, removeHighlight } = useAnnotationStore.getState();
   const settings = useSettingsStore();
@@ -176,6 +181,7 @@ export default function Reader({ bookId }: { bookId: string }) {
           setPercentage(pct);
           updateLocation(loc.start.cfi);
           saveProgressRef.current(loc.start.cfi, pct);
+          noteRef.current(pct, true);
           const current = [...tocRef.current].reverse().find((t) => t.index !== -1 && t.index <= loc.start.index);
           setChapter({ id: current?.id ?? null, label: current?.label ?? '' });
         });
@@ -270,12 +276,9 @@ export default function Reader({ bookId }: { bookId: string }) {
 
     return () => {
       cancelled = true;
-      try {
-        renditionRef.current?.destroy();
-        epubRef.current?.destroy();
-      } catch {
-        /* destroy can throw if the book never finished opening */
-      }
+      // disposeEpub waits for epub.js to finish opening before destroying it (the reader may
+      // tap Back right after opening a book), which avoids epub.js's teardown race.
+      disposeEpub(epubRef.current, renditionRef.current);
       renditionRef.current = null;
       epubRef.current = null;
       setLocationsReady(false);

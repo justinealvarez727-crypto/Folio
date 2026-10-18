@@ -1,4 +1,5 @@
 import { deleteBookBlobs, saveBookFile, saveCover } from './storage';
+import { disposeEpub } from './epubSafe';
 import { useAnnotationStore } from '../stores/annotationStore';
 import { useLibraryStore } from '../stores/libraryStore';
 import type { Book } from '../types';
@@ -66,7 +67,7 @@ export async function importEpub(file: File): Promise<ImportResult> {
   } catch (e) {
     throw new ImportError(`Couldn’t read “${file.name}”. The file may be corrupted or DRM-protected.`);
   } finally {
-    epub.destroy();
+    disposeEpub(epub);
   }
 
   await saveBookFile(id, buffer);

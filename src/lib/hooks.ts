@@ -3,12 +3,13 @@ import { loadCover } from './storage';
 import { resolveTheme } from './themes';
 import { useAnnotationStore } from '../stores/annotationStore';
 import { useLibraryStore } from '../stores/libraryStore';
+import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import type { ThemeName } from '../types';
 
 /** True once every persisted store has finished loading from IndexedDB. */
 export function useAllHydrated(): boolean {
-  const stores = [useLibraryStore, useAnnotationStore];
+  const stores = [useLibraryStore, useAnnotationStore, useLogStore];
   const [ready, setReady] = useState(() => stores.every((s) => s.persist.hasHydrated()));
   useEffect(() => {
     if (ready) return;
@@ -120,4 +121,116 @@ export function useDebouncedCallback<A extends unknown[]>(fn: (...a: A) => void,
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => fnRef.current(...args), ms);
   };
+}
+
+/* ------------------------------------------------------------------ spine colours */
+
+export interface SpineColor {
+  /** CSS colours for the spine gradient (top highlight → base → bottom shade). */
+  top: string;
+  base: string;
+  bottom: string;
+  /** Readable text colour for this spine. */
+  fg: string;
+  /** Subtle decorative band colour. */
+  band: string;
+}
+
+const spineCache = new Map<string, SpineColor>();
+
+function fromRgb(r: number, g: number, b: number): SpineColor {
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  // Very light covers would give a washed-out spine; pull them toward the middle.
+  const k = lum > 0.7 ? 0.62 : lum < 0.12 ? 1.9 : 1;
+  const [R, G, B] = [r * k, g * k, b * k].map(clamp) as [number, number, number];
+  const mix = (t: number) => `rgb(${clamp(R * t)} ${clamp(G * t)} ${clamp(B * t)})`;
+  const finalLum = (0.299 * R + 0.587 * G + 0.114 * B) / 255;
+  const dark = finalLum < 0.55;
+  return {
+    top: mix(1.18),
+    base: mix(1),
+    bottom: mix(0.78),
+    fg: dark ? 'rgb(255 255 255 / 0.94)' : 'rgb(20 20 20 / 0.9)',
+    band: dark ? 'rgb(255 255 255 / 0.28)' : 'rgb(0 0 0 / 0.28)',
+  };
+}
+
+/** Deterministic, pleasant colour for books without a cover. */
+function fallbackSpine(seed: string): SpineColor {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
+  // HSL(h, 38%, 36%) → RGB
+  const s = 0.38;
+  const l = 0.36;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)));
+  };
+  return fromRgb(f(0), f(8), f(4));
+}
+
+/** Average colour of a cover (weighted toward saturated pixels so white margins don't win). */
+async function sampleCover(blob: Blob): Promise<[number, number, number] | null> {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+    await img.decode();
+    const size = 16;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, size, size);
+    const data = ctx.getImageData(0, 0, size, size).data;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let w = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const R = data[i]!;
+      const G = data[i + 1]!;
+      const B = data[i + 2]!;
+      const sat = Math.max(R, G, B) - Math.min(R, G, B);
+      const weight = 1 + sat / 32;
+      r += R * weight;
+      g += G * weight;
+      b += B * weight;
+      w += weight;
+    }
+    return w ? [r / w, g / w, b / w] : null;
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Spine colour derived from the book's cover; falls back to a stable hue from its id. */
+export function useSpineColor(bookId: string, hasCover: boolean): SpineColor {
+  const [color, setColor] = useState<SpineColor>(() => spineCache.get(bookId) ?? fallbackSpine(bookId));
+  useEffect(() => {
+    const cached = spineCache.get(bookId);
+    if (cached) {
+      setColor(cached);
+      return;
+    }
+    if (!hasCover) return;
+    let cancelled = false;
+    void loadCover(bookId).then(async (blob) => {
+      if (!blob || cancelled) return;
+      const rgb = await sampleCover(blob);
+      if (!rgb || cancelled) return;
+      const c = fromRgb(...rgb);
+      spineCache.set(bookId, c);
+      setColor(c);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, hasCover]);
+  return color;
 }

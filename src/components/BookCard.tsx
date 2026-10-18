@@ -2,6 +2,9 @@ import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useCoverUrl } from '../lib/hooks';
 import { navigate, paths } from '../lib/router';
+import { toast } from '../stores/toastStore';
+import { useLibraryStore } from '../stores/libraryStore';
+import { isFinished } from '../lib/status';
 import type { Book } from '../types';
 import { IconMore, IconTrash } from './Icons';
 
@@ -15,7 +18,7 @@ function placeholderGradient(seed: string): string {
 type Status = { kind: 'new' } | { kind: 'reading'; pct: number } | { kind: 'finished' };
 
 function statusOf(b: Book): Status {
-  if (b.progress.percentage >= 0.99) return { kind: 'finished' };
+  if (isFinished(b)) return { kind: 'finished' };
   if (!b.progress.cfi && b.progress.percentage === 0) return { kind: 'new' };
   return { kind: 'reading', pct: Math.max(1, Math.round(b.progress.percentage * 100)) };
 }
@@ -106,6 +109,17 @@ export const BookCard = memo(function BookCard({ book, onDelete }: { book: Book;
           <button
             role="menuitem"
             autoFocus
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[14px] hover:bg-surface2"
+            onClick={() => {
+              setMenu(false);
+              useLibraryStore.getState().setFinished(book.id, true);
+              toast.success(`“${book.title}” is on your Finished shelf.`);
+            }}
+          >
+            Mark as finished
+          </button>
+          <button
+            role="menuitem"
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-[14px] text-danger hover:bg-surface2"
             onClick={() => {
               setMenu(false);

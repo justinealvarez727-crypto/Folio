@@ -10,6 +10,7 @@ import { Toaster } from './components/Toaster';
  * Code splitting: the reader (epub.js + JSZip, ~107 kB gzip) is its own chunk,
  * fetched on first navigation and then cached by the service worker.
  */
+const ReadingLog = lazy(() => import('./components/ReadingLog'));
 const Reader = lazy(() => import('./components/Reader'));
 
 function RouteFallback() {
@@ -38,7 +39,7 @@ export default function App() {
           <LibrarySkeleton />
         ) : (
           <Suspense fallback={<RouteFallback />}>
-            {route.name === 'read' ? <Reader key={route.id} bookId={route.id} /> : <Library />}
+            {route.name === 'read' ? <Reader key={route.id} bookId={route.id} /> : route.name === 'log' ? <ReadingLog /> : <Library />}
           </Suspense>
         )}
       </ErrorBoundary>

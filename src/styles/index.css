@@ -18,6 +18,8 @@
   --accent: 0 113 188;
   --accent-fg: 255 255 255;
   --danger: 196 30 40;
+  --plank-top: 178 130 86;
+  --plank-bottom: 126 86 50;
   color-scheme: light;
 }
 :root[data-theme='dark'] {
@@ -30,6 +32,8 @@
   --accent: 84 170 235;
   --accent-fg: 0 0 0;
   --danger: 255 120 120;
+  --plank-top: 96 68 46;
+  --plank-bottom: 60 42 28;
   color-scheme: dark;
 }
 :root[data-theme='sepia'] {
@@ -42,6 +46,8 @@
   --accent: 140 70 25;
   --accent-fg: 255 250 240;
   --danger: 170 40 40;
+  --plank-top: 168 120 76;
+  --plank-bottom: 120 80 46;
   color-scheme: light;
 }
 
