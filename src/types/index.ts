@@ -11,6 +11,7 @@ export type ThemeName = 'light' | 'dark' | 'sepia';
 export type ThemePreference = ThemeName | 'system';
 export type FontFamilyKey = 'serif' | 'sans';
 export type FlowMode = 'paginated' | 'scrolled';
+export type PageTurn = 'curl' | 'slide' | 'none';
 export type MarginSize = 'narrow' | 'normal' | 'wide';
 
 export interface ReadingProgress {
@@ -65,6 +66,8 @@ export interface ReaderSettings {
   /** Side margins of the page, like Kindle's Layout > Margins. */
   margin: MarginSize;
   justify: boolean;
+  /** Animation when turning a page (paginated mode). */
+  pageTurn: PageTurn;
 }
 
 export interface TocEntry {

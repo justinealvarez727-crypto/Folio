@@ -30,6 +30,7 @@ Note: iOS can clear data of web apps that are unused for a long time. Keep a cop
 - **Tap zones:** tap the **left side** for the previous page, the **right side** for the next, the **middle** to show/hide the menu. Swiping works too, and so do ← / → / PageUp / PageDown on a keyboard. The whole screen is tappable, including the white margins.
 - **Menu (middle tap):** back, **Aa**, contents, highlights & notes, plus a progress scrubber with the chapter name. It briefly appears when you open a book and tucks itself away.
 - **Aa panel:** White / Black / Sepia themes, font size, Serif / Sans, margins (narrow / normal / wide), line spacing, pages vs. continuous scroll, justify toggle.
+- **Page-turn animation:** the new page swings in from the binding edge with a soft shadow (**Page flip**), or glides in (**Slide**), or **None**. Choose it in the Aa panel; it is off automatically with reduced-motion and in continuous scroll.
 - **Highlights:** select text → pick yellow, green, blue or pink. Tap a highlight to recolour, add a note, or delete it. Export all highlights as Markdown.
 
 ## Reading log

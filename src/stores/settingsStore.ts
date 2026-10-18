@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: ReaderSettings = {
   flow: 'paginated',
   margin: 'normal',
   justify: true,
+  pageTurn: 'curl',
 };
 
 interface SettingsState extends ReaderSettings {
@@ -41,6 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
         flow: s.flow,
         margin: s.margin,
         justify: s.justify,
+        pageTurn: s.pageTurn,
       }),
     },
   ),

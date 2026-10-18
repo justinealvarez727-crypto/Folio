@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { FONT_STACKS, READER_THEMES } from '../lib/themes';
-import type { FlowMode, FontFamilyKey, MarginSize, ThemeName } from '../types';
+import type { FlowMode, PageTurn, FontFamilyKey, MarginSize, ThemeName } from '../types';
 
 function Row({ label, children, id }: { label: string; children: ReactNode; id: string }) {
   return (
@@ -145,6 +145,21 @@ export function SettingsPanel() {
           ]}
         />
       </Row>
+
+      {s.flow === 'paginated' && (
+        <Row label="Page turn animation" id="set-turn">
+          <Segmented<PageTurn>
+            name="pageTurn"
+            value={s.pageTurn}
+            onChange={(v) => s.set('pageTurn', v)}
+            options={[
+              { value: 'curl', label: 'Page flip' },
+              { value: 'slide', label: 'Slide' },
+              { value: 'none', label: 'None' },
+            ]}
+          />
+        </Row>
+      )}
 
       <label className="flex cursor-pointer items-center justify-between rounded-lg bg-surface2 px-3 py-3 text-[14px]">
         <span>Justify text</span>
