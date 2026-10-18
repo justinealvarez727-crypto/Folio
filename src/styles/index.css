@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Design tokens (RGB channels so Tailwind can apply alpha: bg-accent/10).
+   Palette follows an e-reader look: paper white / true black / sepia, one blue
+   accent, hairline borders. Every text/background pair below is >= 4.5:1 (WCAG 2.1 AA).
+   --------------------------------------------------------------------------- */
+:root,
+:root[data-theme='light'] {
+  --bg: 255 255 255;
+  --surface: 255 255 255;
+  --surface-2: 242 243 245;
+  --fg: 17 17 17;
+  --muted: 102 106 112;
+  --border: 223 225 228;
+  --accent: 0 113 188;
+  --accent-fg: 255 255 255;
+  --danger: 196 30 40;
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --bg: 0 0 0;
+  --surface: 20 20 22;
+  --surface-2: 34 34 38;
+  --fg: 226 226 228;
+  --muted: 150 153 160;
+  --border: 48 49 54;
+  --accent: 84 170 235;
+  --accent-fg: 0 0 0;
+  --danger: 255 120 120;
+  color-scheme: dark;
+}
+:root[data-theme='sepia'] {
+  --bg: 248 241 227;
+  --surface: 252 247 236;
+  --surface-2: 238 229 208;
+  --fg: 60 46 30;
+  --muted: 110 92 68;
+  --border: 222 210 182;
+  --accent: 140 70 25;
+  --accent-fg: 255 250 240;
+  --danger: 170 40 40;
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  @apply bg-bg font-sans text-fg antialiased;
+  font-size: 15px;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Visible keyboard focus everywhere (WCAG 2.4.7), but not for mouse clicks. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.25);
+}
+
+.skip-link {
+  @apply absolute left-3 top-3 z-[100] -translate-y-20 rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-fg;
+}
+.skip-link:focus {
+  @apply translate-y-0;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-[38px] select-none items-center justify-center gap-2 rounded-md px-3 text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-accent-fg hover:bg-accent/90;
+  }
+  .btn-ghost {
+    @apply btn text-fg/80 hover:bg-surface2 hover:text-fg;
+  }
+  .btn-outline {
+    @apply btn border border-line bg-surface text-fg hover:bg-surface2;
+  }
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg/70 transition-colors hover:bg-surface2 hover:text-fg disabled:opacity-40;
+  }
+  .card {
+    @apply rounded-lg border border-line bg-surface shadow-card;
+  }
+  .kbd {
+    @apply rounded border border-line bg-surface2 px-1.5 py-0.5 font-mono text-[11px] text-muted;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-surface2;
+  }
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--border)) transparent;
+}
+
+/* Range inputs: accessible native control, themed */
+input[type='range'] {
+  accent-color: rgb(var(--accent));
+}
+
+/* Respect reduced-motion for everything that isn't Framer-controlled (Framer uses MotionConfig). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* epub.js mounts an iframe; make sure it never shows a white flash. */
+.epub-host iframe {
+  background: transparent;
+  border: 0;
+}

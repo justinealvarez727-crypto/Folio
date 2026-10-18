@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Folio — a calm, offline-first EPUB reader with highlights and notes." />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>Folio — EPUB Reader</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a flash. Settings are
+      // mirrored in localStorage (small, sync) while books/highlights live in IndexedDB.
+      try {
+        var s = JSON.parse(localStorage.getItem('folio-settings') || '{}').state || {};
+        var t = s.theme || 'system';
+        if (t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Folio needs JavaScript to read and store your books on this device.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
