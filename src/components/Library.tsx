@@ -8,6 +8,7 @@ import { reportError } from '../lib/perf';
 import type { Book } from '../types';
 import { BookCard } from './BookCard';
 import { BookShelf } from './BookShelf';
+import { LibraryOverview } from './LibraryOverview';
 import { bookState, isFinished } from '../lib/status';
 import { Sheet } from './Sheet';
 import { SettingsPanel } from './SettingsPanel';
@@ -153,6 +154,8 @@ export function Library() {
           }}
         />
       </header>
+
+      {!empty && <LibraryOverview books={all} />}
 
       {!empty && (
         <div className="sticky top-[calc(3.25rem+env(safe-area-inset-top))] z-10 -mx-5 bg-bg/95 px-5 pb-3 backdrop-blur sm:-mx-8 sm:px-8">

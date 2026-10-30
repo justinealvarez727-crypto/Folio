@@ -25,12 +25,14 @@ Note: iOS can clear data of web apps that are unused for a long time. Keep a cop
 ## Kindle-style design
 
 - **Library:** a cover-only grid with soft shadows, a blue **NEW** badge for unread books, "42% read" under started ones, and a ⋯ menu per book. Filter chips (All / Unread / Reading / Finished), search and sort.
+- **Quote & stats:** a one-line reading quote that changes every day (22 public-domain quotes; tap for another) and a slim strip with time read, reading, read and unread (plus your streak). A hairline bar shows how much of your library is read. Tap the strip to open the reading log.
 - **Finished shelf:** books you finish leave the cover grid and are piled **spine-out on a wooden shelf**, five to a stack. Each spine takes its color from the book's cover, its thickness from the file size, and shows the title and author. The book finished longest ago is at the bottom, and each new one lands on top. Hover (or focus) a spine to pull it out; tap it to reopen the book. A book is shelved automatically at 99%, or manually with **⋯ → Mark as finished**; **⋯ → Move back to library** on a spine undoes it.
 - **Reading view:** edge-to-edge justified text with nothing in the way. Only the book title is shown on top; **Location n of N · percent · time left** is at the bottom.
 - **Tap zones:** tap the **left side** for the previous page, the **right side** for the next, the **middle** to show/hide the menu. Swiping works too, and so do ← / → / PageUp / PageDown on a keyboard. The whole screen is tappable, including the white margins.
 - **Menu (middle tap):** back, **Aa**, contents, highlights & notes, plus a progress scrubber with the chapter name. It briefly appears when you open a book and tucks itself away.
 - **Aa panel:** White / Black / Sepia themes, font size, Serif / Sans, margins (narrow / normal / wide), line spacing, pages vs. continuous scroll, justify toggle.
 - **Page-turn animation:** a quick, subtle fade (or a small slide, or none). Choose it in the Aa panel; off automatically with reduced-motion and in continuous scroll.
+- **Sleep timer:** the moon button in the reading menu. Pick 15–90 minutes or slide to any length from 5 to 120; the screen dims through the last minute, then goes black until you tap it. Your last choice is remembered.
 - **Highlights:** select text → pick yellow, green, blue or pink. Tap a highlight to recolour, add a note, or delete it. Export all highlights as Markdown.
 
 ## Reading log

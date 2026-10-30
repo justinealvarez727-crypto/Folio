@@ -13,13 +13,15 @@ import { useDebouncedCallback, useResolvedTheme } from '../lib/hooks';
 import { navigate, paths } from '../lib/router';
 import type { HighlightColor, MarginSize, ThemeName, TocEntry } from '../types';
 import { ProgressBar } from './ProgressBar';
+import { toast } from '../stores/toastStore';
 import { Sheet } from './Sheet';
+import { SleepOverlay, SleepPanel } from './SleepTimer';
 import { SettingsPanel } from './SettingsPanel';
 import { HighlightsPanel, TocPanel } from './ReaderPanels';
 import { SelectionToolbar, type SelectionState } from './SelectionToolbar';
-import { IconBack, IconHighlight, IconList, IconNext } from './Icons';
+import { IconBack, IconMoon, IconHighlight, IconList, IconNext } from './Icons';
 
-type Panel = 'contents' | 'highlights' | 'settings' | null;
+type Panel = 'contents' | 'highlights' | 'settings' | 'sleep' | null;
 type TocItem = TocEntry & { index: number };
 
 /** One "location" = this many characters (epub.js locations, like Kindle's Location numbers). */
@@ -71,6 +73,7 @@ export default function Reader({ bookId }: { bookId: string }) {
   const contentsRef = useRef<{ window: Window } | null>(null);
   const appliedRef = useRef(new Map<string, { cfiRange: string; color: HighlightColor }>());
   const tocRef = useRef<TocItem[]>([]);
+  const [sleepAt, setSleepAt] = useState<number | null>(null);
   const panelRef = useRef<Panel>(null);
   const selectionRef = useRef<SelectionState | null>(null);
   const currentCfiRef = useRef<string | null>(null);
@@ -573,6 +576,9 @@ export default function Reader({ bookId }: { bookId: string }) {
             <button className="icon-btn font-serif text-[17px] font-semibold" onClick={() => setPanel('settings')} aria-label="Reading settings">
               Aa
             </button>
+            <button className={`icon-btn ${sleepAt ? 'text-accent' : ''}`} onClick={() => setPanel('sleep')} aria-label={sleepAt ? 'Sleep timer (on)' : 'Sleep timer'}>
+              <IconMoon width={20} height={20} />
+            </button>
             <button className="icon-btn" onClick={() => setPanel('contents')} aria-label="Table of contents">
               <IconList width={20} height={20} />
             </button>
@@ -633,6 +639,21 @@ export default function Reader({ bookId }: { bookId: string }) {
       <Sheet open={panel === 'highlights'} onClose={() => setPanel(null)} title="Highlights & notes">
         <HighlightsPanel book={book} highlights={bookHighlights} onGoto={goto} />
       </Sheet>
+      <Sheet open={panel === 'sleep'} onClose={() => setPanel(null)} title="Sleep timer" placement="bottom">
+        <SleepPanel
+          endAt={sleepAt}
+          onStart={(m) => {
+            setSleepAt(Date.now() + m * 60_000);
+            setPanel(null);
+            toast.success(`Sleep timer set for ${m} minutes.`);
+          }}
+          onCancel={() => {
+            setSleepAt(null);
+            setPanel(null);
+          }}
+        />
+      </Sheet>
+      <SleepOverlay endAt={sleepAt} onWake={() => setSleepAt(null)} />
       <Sheet open={panel === 'settings'} onClose={() => setPanel(null)} title="Reading settings" placement="bottom">
         <SettingsPanel />
       </Sheet>

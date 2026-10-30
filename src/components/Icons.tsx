@@ -97,3 +97,19 @@ export const IconCalendar = (p: P) => (
     <path d="M4 10h16M8 3v4M16 3v4" />
   </svg>
 );
+export const IconMoon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+  </svg>
+);
+export const IconClock = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </svg>
+);
+export const IconBookmark = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 3h12v18l-6-4-6 4z" />
+  </svg>
+);
