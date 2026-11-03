@@ -363,7 +363,35 @@ export default function Reader({ bookId }: { bookId: string }) {
     setChrome(false);
     const r = renditionRef.current;
     if (!r) return;
+    if (dir === 'next' && stepWithinChapter(r)) {
+      animateTurn(dir);
+      return;
+    }
     void (dir === 'next' ? r.next() : r.prev()).then(() => animateTurn(dir));
+  }
+
+  /**
+   * Safety net against skipped pages. epub.js leaves the chapter when `scrollLeft + page + delta > scrollWidth`;
+   * if the measured width comes out a pixel or two short (fractional widths, late-loading images) it jumps to the
+   * next chapter while a last page remains. If there is still a page's worth of content after the one on screen,
+   * we scroll to it ourselves. Returns true when it handled the turn.
+   */
+  function stepWithinChapter(r: Rendition): boolean {
+    if (useSettingsStore.getState().flow !== 'paginated') return false;
+    try {
+      const mgr = (r as unknown as { manager?: { container?: HTMLElement; layout?: { delta: number }; scrollBy: (x: number, y: number, silent: boolean) => void } }).manager;
+      const c = mgr?.container;
+      const delta = mgr?.layout?.delta;
+      if (!mgr || !c || !delta) return false;
+      const remaining = c.scrollWidth - (c.scrollLeft + c.offsetWidth);
+      const epubWouldLeave = c.scrollLeft + c.offsetWidth + delta > c.scrollWidth;
+      if (!epubWouldLeave || remaining < 8) return false; // epub.js is right: nothing (visible) left on this chapter
+      mgr.scrollBy(delta, 0, true);
+      void r.reportLocation();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
